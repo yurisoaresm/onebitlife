@@ -13,7 +13,7 @@ export default function DefaultButton({
       activeOpacity={0.7}
       onPress={handlePress}
     >
-        <Text style={styles.buttonText}> {buttonText} </Text>
+    <Text style={styles.buttonText}> {buttonText} </Text>
     </TouchableOpacity>
   );
 }
