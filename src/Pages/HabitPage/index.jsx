@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-import SelectHabit from "./SelectHabit";
-import SelectFrequency from "./SelectFrequency";
-import Notification from "./Notification";
+import SelectHabit from "../../Components/HabitPage/SelectHabit";
+import SelectFrequency from "../../Components/HabitPage/SelectFrequency";
+import Notification from "../../Components/HabitPage/Notification";
 
 export default function HabitPage({ route }) { 
   const navigation = useNavigation();
