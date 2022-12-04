@@ -1,16 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import SelectHabit from "../../Components/HabitPage/SelectHabit";
 import SelectFrequency from "../../Components/HabitPage/SelectFrequency";
 import Notification from "../../Components/HabitPage/Notification";
+import TimeDatePicker from "../../Components/HabitPage/TimeDatePicker";
 
 export default function HabitPage({ route }) { 
   const navigation = useNavigation();
+
   const [habitInput, setHabitInput] = useState();
   const [frequencyInput, setFrequencyInput] = useState();
   const [notificationToggle, setNotificationToggle] = useState();
+  const [dayNotification, setDayNotification] = useState();
+  const [timeNotification, setTimeNotification] = useState();
 
   const { create, habit } = route.params;
 
@@ -53,6 +57,18 @@ export default function HabitPage({ route }) {
                 setNotificationToggle={setNotificationToggle}
               />
             )}
+
+            {notificationToggle ? (
+              frequencyInput === "Mensal" ? null : (
+                <TimeDatePicker
+                  frequency={frequencyInput}
+                  dayNotification={dayNotification}
+                  timeNotification={timeNotification}
+                  setDayNotification={setDayNotification}
+                  setTimeNotification={setTimeNotification}
+                />
+              )
+            ) : null}
           </View>
         </View>
       </ScrollView>
