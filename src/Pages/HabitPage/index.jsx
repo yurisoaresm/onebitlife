@@ -1,6 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
+import NotificationService from "../../Services/NotificationService";
 
 import SelectHabit from "../../Components/HabitPage/SelectHabit";
 import SelectFrequency from "../../Components/HabitPage/SelectFrequency";
@@ -8,10 +18,18 @@ import Notification from "../../Components/HabitPage/Notification";
 import TimeDatePicker from "../../Components/HabitPage/TimeDatePicker";
 import UpdateExcludeButtons from "../../Components/HabitPage/UpdateExcludeButtons";
 import DefaultButton from "../../Components/Common/DefaultButton";
+import HabitsService from "../../Services/HabitsService";
 
-export default function HabitPage({ route }) { 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
+export default function HabitPage({ route }) {
   const navigation = useNavigation();
-
   const [habitInput, setHabitInput] = useState();
   const [frequencyInput, setFrequencyInput] = useState();
   const [notificationToggle, setNotificationToggle] = useState();
@@ -20,11 +38,15 @@ export default function HabitPage({ route }) {
 
   const { create, habit } = route.params;
 
+  const habitCreated = new Date();
+  const formatDate = `${habitCreated.getFullYear()}-${habitCreated.getMonth()}-${habitCreated.getDate()}`;
+
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
   function handleCreateHabit() {
-    if (
-      habitInput === undefined ||
-      frequencyInput === undefined
-    ) {
+    if (habitInput === undefined || frequencyInput === undefined) {
       Alert.alert(
         "Você precisa selecionar um hábito e frequência para continuar"
       );
@@ -44,9 +66,34 @@ export default function HabitPage({ route }) {
         "Você precisa dizer a frequência e o horário da notificação!"
       );
     } else {
-	     navigation.navigate("Home", {
-         createdHabit: `Created in ${habit?.habitArea}`,
-       });
+      if (notificationToggle) {
+        NotificationService.createNotification(
+          habitInput,
+          frequencyInput,
+          dayNotification,
+          timeNotification
+        );
+      }
+
+      HabitsService.createHabit({
+        habitArea: habit?.habitArea,
+        habitName: habitInput,
+        habitFrequency: frequencyInput,
+        habitHasNotification: notificationToggle,
+        habitNotificationFrequency: dayNotification,
+        habitNotificationTime: timeNotification,
+        lastCheck: formatDate,
+        daysWithoutChecks: 0,
+        habitIsChecked: 0,
+        progressBar: 1,
+        habitChecks: 0,
+      }).then(() => {
+        Alert.alert("Sucesso na criação do hábito!");
+
+        navigation.navigate("Home", {
+          createdHabit: `Created in ${habit?.habitArea}`,
+        });
+      });
     }
   }
 
@@ -54,18 +101,74 @@ export default function HabitPage({ route }) {
     if (notificationToggle === true && !dayNotification && !timeNotification) {
       Alert.alert("Você precisa colocar a frequência e horário da notificação");
     } else {
-      navigation.navigate("Home", {
-        updatedHabit: `Updated in ${habit?.habitArea}`,
+      HabitsService.updateHabit({
+        habitArea: habit?.habitArea,
+        habitName: habitInput,
+        habitFrequency: frequencyInput,
+        habitHasNotification: notificationToggle,
+        habitNotificationFrequency: dayNotification,
+        habitNotificationTime: timeNotification,
+        habitNotificationId: notificationToggle ? habitInput : null,
+      }).then(() => {
+        Alert.alert("Sucesso na atualização do hábito");
+        if (!notificationToggle) {
+          NotificationService.deleteNotification(habit?.habitName);
+        } else {
+          NotificationService.deleteNotification(habit?.habitName);
+          NotificationService.createNotification(
+            habitInput,
+            frequencyInput,
+            dayNotification,
+            timeNotification
+          );
+        }
+
+        navigation.navigate("Home", {
+          updatedHabit: `Updated in ${habit?.habitArea}`,
+        });
       });
     }
   }
+  useEffect(() => {
+    if (habit?.habitHasNotification == 1) {
+      setNotificationToggle(true);
+      setDayNotification(habit?.habitNotificationFrequency);
+      setTimeNotification(habit?.habitNotificationTime);
+    }
+  }, []);
 
-  return(
+  useEffect(() => {
+    if (notificationToggle === false) {
+      setTimeNotification(null);
+      setDayNotification(null);
+    }
+  }, [notificationToggle]);
+
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  return (
     <View style={styles.container}>
       <ScrollView>
         <View>
           <TouchableOpacity
-            style={styles.backPageBtn}
+            style={styles.bakcPageBtn}
             onPress={() => navigation.goBack()}
           >
             <Image
@@ -73,19 +176,15 @@ export default function HabitPage({ route }) {
               style={styles.arrowBack}
             />
           </TouchableOpacity>
-
           <View style={styles.mainContent}>
-            <Text style={styles.title}>Configurações {"\n"} de hábito </Text>
+            <Text style={styles.title}>Configurações {"\n"} de hábito</Text>
             <Text style={styles.inputText}>Área</Text>
             <View style={styles.inputContainer}>
-              <Text style={styles.area}> {habit?.habitArea} </Text>
+              <Text style={styles.area}>{habit?.habitArea}</Text>
             </View>
 
             <Text style={styles.inputText}>Hábito</Text>
-            <SelectHabit 
-              habit={habit} 
-              habitInput={setHabitInput} 
-            />
+            <SelectHabit habit={habit} habitInput={setHabitInput} />
 
             <Text style={styles.inputText}>Frequência</Text>
             <SelectFrequency
@@ -115,7 +214,7 @@ export default function HabitPage({ route }) {
             {create === false ? (
               <UpdateExcludeButtons
                 handleUpdate={handleUpdateHabit}
-                habitArea={habitArea}
+                habitArea={habit?.habitArea}
                 habitInput={habitInput}
               />
             ) : (
@@ -128,7 +227,6 @@ export default function HabitPage({ route }) {
                 />
               </View>
             )}
-
           </View>
         </View>
       </ScrollView>
@@ -141,7 +239,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(21, 21, 21, 0.98)",
   },
-  backPageBtn: {
+  bakcPageBtn: {
     width: 40,
     height: 40,
     margin: 25,
@@ -153,6 +251,9 @@ const styles = StyleSheet.create({
   mainContent: {
     width: 250,
     alignSelf: "center",
+  },
+  configButton: {
+    alignItems: "center",
   },
   title: {
     fontWeight: "bold",

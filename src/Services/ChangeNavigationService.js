@@ -1,7 +1,5 @@
 import db from "../Database";
 
-// Criação da tabela do banco
-// com 3 colunas: id, showHome e appStartData
 db.transaction((tx) => {
   tx.executeSql(
     "CREATE TABLE IF NOT EXISTS change_navigation (id INTEGER PRIMARY KEY AUTOINCREMENT, showHome TEXT, appStartData TEXT);",
@@ -12,7 +10,6 @@ db.transaction((tx) => {
   );
 });
 
-// Método para setar/atualizar a tabela
 const setShowHome = (obj) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
@@ -22,7 +19,7 @@ const setShowHome = (obj) => {
         (_, { rowsAffected, insertId }) => {
           if (rowsAffected > 0) {
             resolve(insertId);
-          } 
+          }
         },
         (_, error) => {
           reject(error);
@@ -32,7 +29,6 @@ const setShowHome = (obj) => {
   });
 };
 
-// Método para checar a tabela
 const checkShowHome = (id) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {

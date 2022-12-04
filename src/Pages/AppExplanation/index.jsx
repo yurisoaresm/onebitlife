@@ -1,17 +1,24 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  handleNavHome,
+  handleSetShowHome,
+} from "react-native";
 import DefaultButton from "../../Components/Common/DefaultButton";
 import ExplanationCard from "../../Components/Explanation/ExplanationCard";
-import ChangeNavigationService from "../../Services/ChangeNavigationService.js";
+import { useNavigation } from "@react-navigation/native";
+import ChangeNavigationService from "../../Services/ChangeNavigationService";
 
 export default function AppExplanation() {
   const navigation = useNavigation();
-
   const [showHome, setShowHome] = useState("false");
   const startDate = new Date();
-  const appStartData = `${startDate.getFullYear()}-${startDate.getMonth()}-${startDate.getDate()}`;
+  const month = `${startDate.getMonth() + 1}`.padStart(2, "0");
+  const day = `${startDate.getDate()}`.padStart(2, "0");
+  const appStartData = `${startDate.getFullYear()}-${month}-${day}`;
 
   function handleNavHome() {
     navigation.navigate("Home");
@@ -30,23 +37,24 @@ export default function AppExplanation() {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <View style={{ alignItems: "center" }} >
+        <View style={{ alignItems: "center" }}>
           <Text style={styles.title}>
-            Antes, deixa {"\n"} deixa eu te explicar...
+            Antes, deixa {"\n"} eu te explicar...
           </Text>
           <ExplanationCard />
           <Text style={styles.descriptionCta}>
             Pronto(a) para subir de nível na vida?
           </Text>
           <Text style={styles.description}>
-            Na próxima tela você vai poder escolher {"\n"} seus quatro hábitos de forma individual.
+            Na próxima tela você vai poder escolher {"\n"} seus 4 hábitos de
+            forma individual.
           </Text>
-          <DefaultButton 
+          <DefaultButton
             buttonText={"Continuar"}
             handlePress={handleSetShowHome}
             width={250}
             height={50}
-          /> 
+          />
         </View>
       </ScrollView>
     </View>
@@ -77,4 +85,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
   },
-})
+});

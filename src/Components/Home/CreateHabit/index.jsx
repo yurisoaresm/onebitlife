@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 export default function CreateHabit({ habitArea, borderColor }) {
@@ -7,13 +7,13 @@ export default function CreateHabit({ habitArea, borderColor }) {
 
   function handleCreate() {
     navigation.navigate("HabitPage", {
-      create : true,
-      habit : { habitArea : habitArea },
+      create: true,
+      habit: { habitArea: habitArea },
     });
   }
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       activeOpacity={0.8}
       style={[styles.button, { borderColor: borderColor }]}
       onPress={handleCreate}

@@ -1,5 +1,13 @@
-import React from "react";
-import { View, Text, StyleSheet, Switch } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { Switch } from "react-native-gesture-handler";
 
 export default function Notification({
   notificationToggle,
@@ -8,7 +16,6 @@ export default function Notification({
   const toggleSwitch = () => {
     setNotificationToggle((previousState) => !previousState);
   };
-
   return (
     <>
       <View style={styles.container}>
